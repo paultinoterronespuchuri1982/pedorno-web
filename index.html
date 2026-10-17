@@ -238,6 +238,10 @@
     88% { transform: translate(-20px, 10px); }
   }
 
+  /* Mojones que salen volando al explotar */
+  .mojon { position: fixed; z-index: 216; pointer-events: none; line-height: 1; animation: mojonVuela 1.6s cubic-bezier(.15,.7,.3,1) forwards; }
+  @keyframes mojonVuela { to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
+
   /* Vista ampliada de fotos */
   .lightbox { position: fixed; inset: 0; z-index: 220; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; cursor: zoom-out; }
   .lightbox[hidden] { display: none; }
@@ -751,6 +755,22 @@
       pt.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
       pt.addEventListener('animationend', () => pt.remove());
       document.body.appendChild(pt);
+    }
+
+    // Mojones que salen volando en todas direcciones desde la explosión
+    for (let i = 0; i < 50; i++) {
+      const ang = (i / 50) * Math.PI * 2 + Math.random() * 0.2;
+      const dist = 250 + Math.random() * 500;
+      const m = document.createElement('span');
+      m.className = 'mojon';
+      m.textContent = '💩';
+      m.style.fontSize = (22 + Math.random() * 26) + 'px';
+      m.style.left = x + 'px'; m.style.top = y + 'px';
+      m.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      m.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      m.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+      m.addEventListener('animationend', () => m.remove());
+      document.body.appendChild(m);
     }
 
     // Temblor de toda la web (las secciones y el encabezado; el avión y el cursor no se mueven)
