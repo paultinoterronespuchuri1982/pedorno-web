@@ -623,7 +623,7 @@
       if (!ac && !startAudio()) return;
       if (ac.state === 'suspended') ac.resume();
       muted = false;
-      engine.master.gain.setTargetAtTime(1.155, ac.currentTime, 0.08);
+      engine.master.gain.setTargetAtTime(0.5775, ac.currentTime, 0.08);
       btn.textContent = 'Sonido: on';
       btn.setAttribute('aria-pressed', 'true');
     }
@@ -703,7 +703,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
-  // Explosión: al triple de volumen (en la web publicada; desde la carpeta el volumen máximo es 1)
+  // Explosión: al doble del volumen anterior (en la web publicada; desde la carpeta el volumen máximo es 1)
   let bombaCtx = null;
   function sonarBomba() {
     const b = new Audio('img/bomba.mp3');
@@ -714,7 +714,7 @@
         if (bombaCtx.state === 'suspended') bombaCtx.resume();
         const src = bombaCtx.createMediaElementSource(b);
         const g = bombaCtx.createGain();
-        g.gain.value = 3;
+        g.gain.value = 6;
         src.connect(g); g.connect(bombaCtx.destination);
       } catch (e) { b.volume = 1; }
     } else {
