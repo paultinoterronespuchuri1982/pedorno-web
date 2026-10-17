@@ -567,6 +567,19 @@
     const btn = document.getElementById('sonido');
     let ac = null, engine = null, muted = true;
     function startAudio() {
+      if (window.location.protocol === 'file:') {
+        // Página abierta desde la carpeta: modo simple (el navegador no deja controlar el audio en este caso)
+        ac = { currentTime: 0, state: 'running', resume() {} };
+        const el = new Audio('img/motor.mp3');
+        el.loop = true; el.volume = 0;
+        el.play().catch(() => {});
+        engine = {
+          el,
+          pan: { pan: { setTargetAtTime() {} } },
+          master: { gain: { value: 0, setTargetAtTime(v) { el.volume = Math.max(0, Math.min(1, v / 1.65)); } } },
+        };
+        return true;
+      }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ac = new AC();
