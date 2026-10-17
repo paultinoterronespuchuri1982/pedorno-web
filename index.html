@@ -703,23 +703,9 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
-  // Explosión: al doble del volumen anterior (en la web publicada; desde la carpeta el volumen máximo es 1)
-  let bombaCtx = null;
+  // Explosión: el archivo img/bomba.mp3 ya viene a 5 veces el volumen original
   function sonarBomba() {
     const b = new Audio('img/bomba.mp3');
-    if (window.location.protocol.startsWith('http')) {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        bombaCtx = bombaCtx || new AC();
-        if (bombaCtx.state === 'suspended') bombaCtx.resume();
-        const src = bombaCtx.createMediaElementSource(b);
-        const g = bombaCtx.createGain();
-        g.gain.value = 6;
-        src.connect(g); g.connect(bombaCtx.destination);
-      } catch (e) { b.volume = 1; }
-    } else {
-      b.volume = 1;
-    }
     b.play().catch(() => {});
   }
 
