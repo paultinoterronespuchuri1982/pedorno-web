@@ -195,7 +195,7 @@
   .bandcamp iframe { display: block; }
 
   /* Avión que vuela por todo el sitio */
-  .avion { position: fixed; left: 0; top: 0; width: 340px; height: auto; pointer-events: none; z-index: 95; will-change: transform; filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); transform-origin: 50% 50%; }
+  .avion { position: fixed; left: 0; top: 0; width: 340px; height: auto; pointer-events: auto; cursor: pointer; z-index: 95; will-change: transform; filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); transform-origin: 50% 50%; }
   .sonido { position: fixed; left: 1rem; bottom: 1rem; z-index: 130; background: #000; color: var(--acid); border: 1px solid var(--acid); font-family: var(--display); font-size: .72rem; text-transform: uppercase; letter-spacing: .15em; padding: .55rem .8rem; cursor: pointer; }
   .sonido:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
   @media (max-width: 700px) { .avion { width: 240px; } }
@@ -506,6 +506,7 @@
     plane.alt = '';
     plane.className = 'avion';
     plane.setAttribute('aria-hidden', 'true');
+    plane.addEventListener('pointerdown', fartSound); // el pedo suena solo al tocar el avión
     document.body.appendChild(plane);
     const hw = () => plane.offsetWidth / 2;
     const hh = () => plane.offsetHeight / 2;
@@ -704,7 +705,7 @@
       if (p && p.catch) p.catch(() => {});
     }
   }
-  document.addEventListener('pointerdown', fartSound);
+
 
 </script>
 </body>
