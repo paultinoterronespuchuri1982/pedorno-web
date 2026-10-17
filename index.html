@@ -749,11 +749,11 @@
     if (h) { h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); }
   }
 
-  // Explosión: el archivo img/bomba.mp3 ya viene a 5 veces el volumen; suena a 4 veces la velocidad y explota al terminar
+  // Explosión: el archivo img/bomba.mp3 ya viene a 5 veces el volumen; dura 5 segundos y explota al terminar
   function sonarBomba(x) {
     const b = new Audio('img/bomba.mp3');
     b.preservesPitch = false; b.webkitPreservesPitch = false; // acelera también el tono, como una cinta
-    b.playbackRate = 4;
+    b.playbackRate = 9.77 / 5; // 9,77 s de audio en 5 s
     b.onended = () => explotar(x, window.innerHeight * 0.85);
     b.play().catch(() => {});
   }
