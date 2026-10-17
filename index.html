@@ -211,6 +211,11 @@
   @keyframes heroIn { from { opacity: 0; filter: grayscale(1) contrast(1.2) blur(18px); transform: scale(1.12); } to { opacity: .55; filter: grayscale(1) contrast(1.2) blur(0); transform: none; } }
   @keyframes nameIn { from { opacity: 0; transform: translateY(40px) scale(.96); } to { opacity: 1; transform: none; } }
 
+  /* Imagen que cae del avión al tocarlo */
+  .kk { position: fixed; left: 0; top: 0; width: 90px; height: auto; pointer-events: none; z-index: 94; transform: translate(-50%, -50%); animation: kkDrop .6s cubic-bezier(.55,0,1,.45) forwards; }
+  @keyframes kkDrop { from { transform: translate(-50%, -50%) rotate(var(--r)); } to { transform: translate(-50%, calc(-50% + var(--fall))) rotate(calc(var(--r) + 35deg)); } }
+  @media (max-width: 700px) { .kk { width: 60px; } }
+
   /* Vista ampliada de fotos */
   .lightbox { position: fixed; inset: 0; z-index: 220; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; cursor: zoom-out; }
   .lightbox[hidden] { display: none; }
@@ -507,6 +512,23 @@
     plane.className = 'avion';
     plane.setAttribute('aria-hidden', 'true');
     plane.addEventListener('pointerdown', fartSound); // el pedo suena solo al tocar el avión
+    // Al tocar el avión, cae una imagen rápido hacia abajo
+    plane.addEventListener('pointerdown', () => {
+      const r = plane.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height * 0.6;
+      const k = document.createElement('img');
+      k.src = 'img/kk.png';
+      k.alt = '';
+      k.className = 'kk';
+      k.setAttribute('aria-hidden', 'true');
+      k.style.left = x + 'px';
+      k.style.top = y + 'px';
+      k.style.setProperty('--fall', (window.innerHeight - y + 160) + 'px');
+      k.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
+      k.addEventListener('animationend', () => k.remove());
+      document.body.appendChild(k);
+    });
     document.body.appendChild(plane);
     const hw = () => plane.offsetWidth / 2;
     const hh = () => plane.offsetHeight / 2;
