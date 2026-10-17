@@ -528,8 +528,7 @@
       k.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
       k.addEventListener('animationend', () => k.remove());
       // Silbido y explosión al salir la bomba
-      const boom = new Audio('img/bomba.mp3');
-      boom.play().catch(() => {});
+      sonarBomba();
       document.body.appendChild(k);
     });
     document.body.appendChild(plane);
@@ -624,7 +623,7 @@
       if (!ac && !startAudio()) return;
       if (ac.state === 'suspended') ac.resume();
       muted = false;
-      engine.master.gain.setTargetAtTime(1.65, ac.currentTime, 0.08);
+      engine.master.gain.setTargetAtTime(1.155, ac.currentTime, 0.08);
       btn.textContent = 'Sonido: on';
       btn.setAttribute('aria-pressed', 'true');
     }
@@ -702,6 +701,26 @@
     const closeLb = () => { lightbox.hidden = true; lbImg.src = ''; };
     lightbox.addEventListener('click', closeLb);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
+  }
+
+  // Explosión: al triple de volumen (en la web publicada; desde la carpeta el volumen máximo es 1)
+  let bombaCtx = null;
+  function sonarBomba() {
+    const b = new Audio('img/bomba.mp3');
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        bombaCtx = bombaCtx || new AC();
+        if (bombaCtx.state === 'suspended') bombaCtx.resume();
+        const src = bombaCtx.createMediaElementSource(b);
+        const g = bombaCtx.createGain();
+        g.gain.value = 3;
+        src.connect(g); g.connect(bombaCtx.destination);
+      } catch (e) { b.volume = 1; }
+    } else {
+      b.volume = 1;
+    }
+    b.play().catch(() => {});
   }
 
   // Pedo al hacer clic: el archivo se carga una vez y cada clic lanza otro pedo (se pueden encimar)
