@@ -493,6 +493,7 @@
     gateBtn.addEventListener('click', () => {
       bcFrame.src = bcFrame.dataset.auto;
       gate.hidden = true;
+      document.dispatchEvent(new Event('musica-inicia'));
       gateBtn.blur();
     });
   }
@@ -594,9 +595,19 @@
       if (!ac) { if (!startAudio()) { btn.disabled = true; btn.textContent = 'Sin audio'; return; } }
       if (ac.state === 'suspended') ac.resume();
       muted = !muted;
-      engine.master.gain.setTargetAtTime(muted ? 0 : 0.55, ac.currentTime, 0.08);
+      engine.master.gain.setTargetAtTime(muted ? 0 : 1.65, ac.currentTime, 0.08);
       btn.textContent = muted ? 'Sonido: off' : 'Sonido: on';
       btn.setAttribute('aria-pressed', String(!muted));
+    });
+
+    // Cuando empieza la música de Bandcamp, el motor se calla de inmediato
+    document.addEventListener('musica-inicia', () => {
+      if (ac && engine && !muted) {
+        muted = true;
+        engine.master.gain.setTargetAtTime(0, ac.currentTime, 0.02);
+        btn.textContent = 'Sonido: off';
+        btn.setAttribute('aria-pressed', 'false');
+      }
     });
 
     function render(now) {
