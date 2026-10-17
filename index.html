@@ -665,13 +665,31 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
-  // Pedo al hacer clic: usa el archivo img/pedo.mp3
+  // Pedo al hacer clic: el archivo se carga una vez y cada clic lanza otro pedo (se pueden encimar)
   const pedoSrc = 'img/pedo.mp3';
+  let pedoCtx = null, pedoBuf = null;
+  (async () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      pedoCtx = new AC();
+      const r = await fetch(pedoSrc);
+      pedoBuf = await pedoCtx.decodeAudioData(await r.arrayBuffer());
+    } catch (e) { pedoBuf = null; }
+  })();
   function fartSound() {
-    const a = new Audio(pedoSrc);
-    a.volume = 1;
-    const p = a.play();
-    if (p && p.catch) p.catch(() => {});
+    if (pedoBuf && pedoCtx) {
+      if (pedoCtx.state === 'suspended') pedoCtx.resume();
+      const src = pedoCtx.createBufferSource();
+      const g = pedoCtx.createGain();
+      g.gain.value = 1.5;
+      src.buffer = pedoBuf;
+      src.connect(g); g.connect(pedoCtx.destination);
+      src.start();
+    } else {
+      const a = new Audio(pedoSrc);
+      const p = a.play();
+      if (p && p.catch) p.catch(() => {});
+    }
   }
   document.addEventListener('pointerdown', fartSound);
 
