@@ -757,15 +757,15 @@
       document.body.appendChild(pt);
     }
 
-    // 500 mojones (img/mojon.png) que salen volando en todas direcciones desde la explosión
-    for (let i = 0; i < 500; i++) {
-      const ang = (i / 500) * Math.PI * 2 + Math.random() * 0.05;
-      const dist = 250 + Math.random() * 600;
+    // 1000 mojones (img/mojon.png) que vuelan por toda la página en todas direcciones desde la explosión
+    for (let i = 0; i < 1000; i++) {
+      const ang = (i / 1000) * Math.PI * 2 + Math.random() * 0.03;
+      const dist = 200 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 1.1;
       const m = document.createElement('img');
       m.src = 'img/mojon.png';
       m.alt = '';
       m.className = 'mojon';
-      m.style.width = (30 + Math.random() * 40) + 'px';
+      m.style.width = (20 + Math.random() * 30) + 'px';
       m.style.left = x + 'px'; m.style.top = y + 'px';
       m.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
       m.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
