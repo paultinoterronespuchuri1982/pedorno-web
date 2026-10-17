@@ -212,7 +212,7 @@
   @keyframes nameIn { from { opacity: 0; transform: translateY(40px) scale(.96); } to { opacity: 1; transform: none; } }
 
   /* Imagen que cae del avión al tocarlo */
-  .kk { position: fixed; left: 0; top: 0; width: 90px; height: auto; pointer-events: none; z-index: 94; transform: translate(-50%, -50%); animation: kkDrop 2.6s ease-in forwards; }
+  .kk { position: fixed; left: 0; top: 0; width: 90px; height: auto; pointer-events: none; z-index: 94; transform: translate(-50%, -50%); animation: kkDrop 5s linear forwards; }
   @keyframes kkDrop { from { transform: translate(-50%, -50%) rotate(var(--r)); } to { transform: translate(-50%, calc(-50% + var(--fall))) rotate(calc(var(--r) + 35deg)); } }
   @media (max-width: 700px) { .kk { width: 60px; } }
 
