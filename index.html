@@ -184,6 +184,11 @@
   .hero-logo { width: min(92vw, 1100px); height: auto; margin: 0 auto; display: block; cursor: pointer; touch-action: manipulation; }
   .hero-logo.hop { animation: hop .6s cubic-bezier(.2,.7,.2,1); }
 
+  /* Cursor con imagen (sin recuadro ni fondo) */
+  .cursor { width: 80px; height: 80px; border: 0; border-radius: 0; background: none; mix-blend-mode: normal; }
+  .cursor img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cursor.big { width: 110px; height: 110px; background: none; }
+
   /* Reducir movimiento */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -416,6 +421,10 @@
     document.documentElement.classList.add('has-cursor');
     const dot = document.createElement('div');
     dot.className = 'cursor';
+    const pic = document.createElement('img');
+    pic.src = 'img/cursor.png';
+    pic.alt = '';
+    dot.appendChild(pic);
     dot.setAttribute('aria-hidden', 'true');
     document.body.appendChild(dot);
     let mx = 0, my = 0, x = 0, y = 0;
