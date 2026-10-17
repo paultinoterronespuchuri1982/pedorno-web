@@ -45,7 +45,7 @@
   /* Hero */
   .hero { min-height: 100vh; position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 1.5rem 3rem; overflow: hidden; }
   .hero-img { position: absolute; inset: 0; opacity: .55; filter: grayscale(1) contrast(1.2); }
-  .hero-img img { transform: scale(1.1); }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.1); }
   .hero-name {
     font-family: var(--display); font-size: clamp(4.5rem, 21vw, 22rem); line-height: .8; letter-spacing: -.04em;
     text-transform: uppercase; position: relative; white-space: nowrap; user-select: none;
@@ -189,6 +189,12 @@
   .cursor img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .cursor.big { width: 110px; height: 110px; background: none; }
 
+  /* Entrada: el botón permite que suene la música al abrir la web */
+  .gate { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .gate[hidden] { display: none; }
+  .gate-btn { background: var(--acid); color: #000; border: 0; font-family: var(--display); font-size: clamp(1.1rem, 4vw, 1.8rem); text-transform: uppercase; letter-spacing: .08em; padding: 1.1rem 2rem; cursor: pointer; }
+  .gate-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; }
+
   /* Reproductor de Bandcamp */
   .bandcamp { margin-top: 2.5rem; max-width: 720px; }
   .bandcamp iframe { display: block; }
@@ -207,6 +213,10 @@
 </style>
 </head>
 <body>
+
+<div class="gate" id="gate">
+  <button type="button" class="gate-btn" id="gateBtn">Entrar y escuchar ▶</button>
+</div>
 
 <header>
   <a href="#inicio" class="brand"><img src="img/logo.png" alt="PEDORNO" class="logo-img"></a>
@@ -227,7 +237,7 @@
   <!-- HERO -->
   <section class="hero" id="inicio">
     <div class="hero-img" aria-hidden="true">
-      <img src="img/banda-grupo.jpg" alt="">
+      <img src="img/hero-dibujo.jpg" alt="">
     </div>
     <h1 class="hero-name" aria-label="Pedorno"><img src="img/logo.png" alt="PEDORNO" class="hero-logo" tabindex="0"></h1>
     <div class="hero-meta">
@@ -261,7 +271,7 @@
       </div>
     </div>
     <div class="bandcamp reveal">
-      <iframe style="border: 0; width: 100%; height: 470px;" src="https://bandcamp.com/EmbeddedPlayer/album=1945597098/size=large/bgcol=070707/linkcol=d4ff00/tracklist=true/artwork=small/transparent=true/" seamless title="MÁS ALLÁ DEL NOMBRE — pedorno"><a href="https://pedorno.bandcamp.com/album/m-s-all-del-nombre">MÁS ALLÁ DEL NOMBRE by pedorno</a></iframe>
+      <iframe style="border: 0; width: 100%; height: 470px;" data-auto="https://bandcamp.com/EmbeddedPlayer/album=1945597098/size=large/bgcol=070707/linkcol=d4ff00/tracklist=true/artwork=small/transparent=true/autoplay=true/" allow="autoplay" src="https://bandcamp.com/EmbeddedPlayer/album=1945597098/size=large/bgcol=070707/linkcol=d4ff00/tracklist=true/artwork=small/transparent=true/" seamless title="MÁS ALLÁ DEL NOMBRE — pedorno"><a href="https://pedorno.bandcamp.com/album/m-s-all-del-nombre">MÁS ALLÁ DEL NOMBRE by pedorno</a></iframe>
     </div>
   </section>
 
@@ -475,6 +485,18 @@
     l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') hop(); });
     l.setAttribute('tabindex', '0');
   });
+  // Entrada: al tocar el botón arranca el disco de Bandcamp
+  const gate = document.getElementById('gate');
+  const gateBtn = document.getElementById('gateBtn');
+  const bcFrame = document.querySelector('.bandcamp iframe');
+  if (gate && gateBtn && bcFrame) {
+    gateBtn.addEventListener('click', () => {
+      bcFrame.src = bcFrame.dataset.auto;
+      gate.hidden = true;
+      gateBtn.blur();
+    });
+  }
+
   // Avión que vuela por el sitio con sonido de motor
   if (!reduce) {
     const plane = document.createElement('img');
