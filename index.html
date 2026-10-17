@@ -189,6 +189,10 @@
   .cursor img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .cursor.big { width: 110px; height: 110px; background: none; }
 
+  /* Reproductor de Bandcamp */
+  .bandcamp { margin-top: 2.5rem; max-width: 720px; }
+  .bandcamp iframe { display: block; }
+
   /* Avión que vuela por todo el sitio */
   .avion { position: fixed; left: 0; top: 0; width: 340px; height: auto; pointer-events: none; z-index: 95; will-change: transform; filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); transform-origin: 50% 50%; }
   .sonido { position: fixed; left: 1rem; bottom: 1rem; z-index: 130; background: #000; color: var(--acid); border: 1px solid var(--acid); font-family: var(--display); font-size: .72rem; text-transform: uppercase; letter-spacing: .15em; padding: .55rem .8rem; cursor: pointer; }
@@ -255,6 +259,9 @@
         <p>Diez canciones grabadas en un garaje, con guitarras sucias, batería seca y letras que no piden permiso.</p>
         <a href="#" class="btn">Escuchar</a>
       </div>
+    </div>
+    <div class="bandcamp reveal">
+      <iframe style="border: 0; width: 100%; height: 470px;" src="https://bandcamp.com/EmbeddedPlayer/album=1945597098/size=large/bgcol=070707/linkcol=d4ff00/tracklist=true/artwork=small/transparent=true/" seamless title="MÁS ALLÁ DEL NOMBRE — pedorno"><a href="https://pedorno.bandcamp.com/album/m-s-all-del-nombre">MÁS ALLÁ DEL NOMBRE by pedorno</a></iframe>
     </div>
   </section>
 
