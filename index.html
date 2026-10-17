@@ -189,6 +189,12 @@
   .cursor img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .cursor.big { width: 110px; height: 110px; background: none; }
 
+  /* Avión que vuela por todo el sitio */
+  .avion { position: fixed; left: 0; top: 0; width: 170px; height: auto; pointer-events: none; z-index: 95; will-change: transform; filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); transform-origin: 50% 50%; }
+  .sonido { position: fixed; left: 1rem; bottom: 1rem; z-index: 130; background: #000; color: var(--acid); border: 1px solid var(--acid); font-family: var(--display); font-size: .72rem; text-transform: uppercase; letter-spacing: .15em; padding: .55rem .8rem; cursor: pointer; }
+  .sonido:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  @media (max-width: 700px) { .avion { width: 120px; } }
+
   /* Reducir movimiento */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -373,6 +379,8 @@
   </div>
 </footer>
 
+<button class="sonido" id="sonido" aria-pressed="false">Sonido: off</button>
+
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -460,6 +468,132 @@
     l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') hop(); });
     l.setAttribute('tabindex', '0');
   });
+  // Avión que vuela por el sitio con sonido de motor
+  if (!reduce) {
+    const plane = document.createElement('img');
+    plane.src = 'img/avion.png';
+    plane.alt = '';
+    plane.className = 'avion';
+    plane.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(plane);
+    const hw = () => plane.offsetWidth / 2;
+    const hh = () => plane.offsetHeight / 2;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+    const W = () => window.innerWidth;
+    const H = () => window.innerHeight;
+    const onScreen = (p) => p.x > 0 && p.x < W() && p.y > 0 && p.y < H();
+    let cur = { x: -250, y: H() * 0.5, h: 0 };
+    let seg = null, lastT = performance.now(), clock = 0;
+
+    function makeSeg() {
+      const w = W(), h = H();
+      if (onScreen(cur) && Math.random() < 0.35) {
+        // Rizo (loop) que empieza desde donde está y mantiene la dirección
+        const R = rnd(90, 150), dir = Math.random() < 0.5 ? 1 : -1;
+        const th0 = cur.h - dir * Math.PI / 2;
+        return { type: 'loop', dur: rnd(2600, 3400), t: 0, R, dir, th0,
+          cx: cur.x - R * Math.cos(th0), cy: cur.y - R * Math.sin(th0) };
+      }
+      // Pasada en curva de un lado a otro; a veces termina dentro de la pantalla
+      const x0 = cur.x, y0 = cur.y;
+      const inside = Math.random() < 0.45;
+      const tx = inside ? rnd(0.15, 0.85) * w : (x0 < w / 2 ? w + 260 : -260);
+      const ty = inside ? rnd(0.15, 0.85) * h : rnd(-0.05, 1.05) * h;
+      const p1 = { x: x0 + (tx - x0) * 0.33 + rnd(-180, 180), y: rnd(-0.15, 1.15) * h };
+      const p2 = { x: x0 + (tx - x0) * 0.66 + rnd(-180, 180), y: rnd(-0.15, 1.15) * h };
+      const dist = Math.hypot(tx - x0, ty - y0) + 200;
+      return { type: 'bez', dur: clamp(dist / rnd(0.35, 0.6), 2200, 5500), t: 0,
+        pts: [{ x: x0, y: y0 }, p1, p2, { x: tx, y: ty }] };
+    }
+
+    function evalSeg(s, u) {
+      if (s.type === 'loop') {
+        const th = s.th0 + s.dir * Math.PI * 2 * u;
+        return {
+          x: s.cx + s.R * Math.cos(th),
+          y: s.cy + s.R * Math.sin(th),
+          h: Math.atan2(s.dir * Math.cos(th), -s.dir * Math.sin(th)),
+        };
+      }
+      const [P0, P1, P2, P3] = s.pts;
+      const m = 1 - u;
+      const x = m*m*m*P0.x + 3*m*m*u*P1.x + 3*m*u*u*P2.x + u*u*u*P3.x;
+      const y = m*m*m*P0.y + 3*m*m*u*P1.y + 3*m*u*u*P2.y + u*u*u*P3.y;
+      const dx = 3*(m*m*(P1.x-P0.x) + 2*m*u*(P2.x-P1.x) + u*u*(P3.x-P2.x));
+      const dy = 3*(m*m*(P1.y-P0.y) + 2*m*u*(P2.y-P1.y) + u*u*(P3.y-P2.y));
+      return { x, y, h: Math.atan2(dy, dx) };
+    }
+
+    // Sonido de motor (Web Audio) — se activa con el botón
+    const btn = document.getElementById('sonido');
+    let ac = null, engine = null, muted = true;
+    function startAudio() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = new AC();
+      const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const noise = ac.createBufferSource();
+      noise.buffer = buf; noise.loop = true;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.9;
+      const ng = ac.createGain(); ng.gain.value = 0.22;
+      const osc = ac.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 95;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380;
+      const og = ac.createGain(); og.gain.value = 0.06;
+      const lfo = ac.createOscillator(); lfo.frequency.value = 11;
+      const lg = ac.createGain(); lg.gain.value = 0.035;
+      lfo.connect(lg); lg.connect(og.gain);
+      const pan = ac.createStereoPanner();
+      const master = ac.createGain(); master.gain.value = 0;
+      noise.connect(bp); bp.connect(ng); ng.connect(pan);
+      osc.connect(lp); lp.connect(og); og.connect(pan);
+      pan.connect(master); master.connect(ac.destination);
+      noise.start(); osc.start(); lfo.start();
+      engine = { osc, bp, pan, master };
+      return true;
+    }
+    btn.addEventListener('click', () => {
+      if (!ac) { if (!startAudio()) { btn.disabled = true; btn.textContent = 'Sin audio'; return; } }
+      if (ac.state === 'suspended') ac.resume();
+      muted = !muted;
+      engine.master.gain.setTargetAtTime(muted ? 0 : 0.55, ac.currentTime, 0.08);
+      btn.textContent = muted ? 'Sonido: off' : 'Sonido: on';
+      btn.setAttribute('aria-pressed', String(!muted));
+    });
+
+    function render(now) {
+      const dt = Math.min(now - lastT, 100);
+      lastT = now; clock += dt;
+      if (!seg) seg = makeSeg();
+      seg.t += dt;
+      const u = Math.min(seg.t / seg.dur, 1);
+      const p = evalSeg(seg, u);
+      cur = p;
+      const wobble = Math.sin(clock / 160) * 4;   // balanceo
+      const bob = Math.sin(clock / 260) * 10;     // subida y bajada
+      const flip = Math.cos(p.h) < 0;
+      const rot = flip ? (p.h * 180 / Math.PI - 180) : (p.h * 180 / Math.PI);
+      plane.style.transform =
+        `translate3d(${(p.x - hw()).toFixed(1)}px, ${(p.y - hh() + bob).toFixed(1)}px, 0) ` +
+        `rotate(${(rot + wobble).toFixed(2)}deg) scaleX(${flip ? -1 : 1})`;
+
+      if (engine && ac && ac.state === 'running') {
+        const w = W();
+        engine.pan.pan.setTargetAtTime(clamp((p.x / w) * 2 - 1, -0.9, 0.9), ac.currentTime, 0.05);
+        // Efecto Doppler: el tono baja al pasar
+        const dop = 1 + 0.25 * clamp((w / 2 - p.x) / w, -0.5, 0.5);
+        engine.osc.frequency.setTargetAtTime(92 * dop, ac.currentTime, 0.05);
+        engine.bp.frequency.setTargetAtTime(380 * dop, ac.currentTime, 0.05);
+      }
+      if (u >= 1) seg = null;
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  } else {
+    document.getElementById('sonido').hidden = true;
+  }
 </script>
 </body>
 </html>
