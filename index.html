@@ -582,26 +582,15 @@
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ac = new AC();
-      const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      const noise = ac.createBufferSource();
-      noise.buffer = buf; noise.loop = true;
-      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.9;
-      const ng = ac.createGain(); ng.gain.value = 0.22;
-      const osc = ac.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 95;
-      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380;
-      const og = ac.createGain(); og.gain.value = 0.06;
-      const lfo = ac.createOscillator(); lfo.frequency.value = 11;
-      const lg = ac.createGain(); lg.gain.value = 0.035;
-      lfo.connect(lg); lg.connect(og.gain);
+      // Motor: archivo img/motor.mp3 en bucle, pasando por panorámica y volumen
+      const el = new Audio('img/motor.mp3');
+      el.loop = true;
+      const src = ac.createMediaElementSource(el);
       const pan = ac.createStereoPanner();
       const master = ac.createGain(); master.gain.value = 0;
-      noise.connect(bp); bp.connect(ng); ng.connect(pan);
-      osc.connect(lp); lp.connect(og); og.connect(pan);
-      pan.connect(master); master.connect(ac.destination);
-      noise.start(); osc.start(); lfo.start();
-      engine = { osc, bp, pan, master };
+      src.connect(pan); pan.connect(master); master.connect(ac.destination);
+      el.play().catch(() => {});
+      engine = { el, pan, master };
       return true;
     }
     btn.addEventListener('click', () => {
@@ -644,8 +633,7 @@
         engine.pan.pan.setTargetAtTime(clamp((p.x / w) * 2 - 1, -0.9, 0.9), ac.currentTime, 0.05);
         // Efecto Doppler: el tono baja al pasar
         const dop = 1 + 0.25 * clamp((w / 2 - p.x) / w, -0.5, 0.5);
-        engine.osc.frequency.setTargetAtTime(92 * dop, ac.currentTime, 0.05);
-        engine.bp.frequency.setTargetAtTime(380 * dop, ac.currentTime, 0.05);
+        engine.el.playbackRate = dop; // el motor cambia de tono al pasar
       }
       if (u >= 1) seg = null;
       requestAnimationFrame(render);
@@ -673,56 +661,13 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
-  // Pedo al hacer clic (sintetizado con Web Audio)
-  const PAC = window.AudioContext || window.webkitAudioContext;
-  let fac = null, fNoise = null, fComp = null;
+  // Pedo al hacer clic: usa el archivo img/pedo.mp3
+  const pedoSrc = 'img/pedo.mp3';
   function fartSound() {
-    if (!PAC) return;
-    if (!fac) {
-      fac = new PAC();
-      fComp = fac.createDynamicsCompressor();
-      fComp.connect(fac.destination);
-      const len = fac.sampleRate;
-      fNoise = fac.createBuffer(1, len, fac.sampleRate);
-      const d = fNoise.getChannelData(0);
-      let last = 0;
-      for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } // ruido marrón
-    }
-    if (fac.state === 'suspended') fac.resume();
-    const t = fac.currentTime;
-    const dur = 0.85 + Math.random() * 0.45;
-    const g = fac.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(2.2, t + 0.04);
-    // Pulsos de "pedo": el volumen sube y baja de forma irregular
-    let tt = t + 0.04;
-    while (tt < t + dur) {
-      const pulse = 0.08 + Math.random() * 0.1;
-      g.gain.linearRampToValueAtTime(1.2 + Math.random() * 1.2, tt + pulse * 0.4);
-      g.gain.linearRampToValueAtTime(0.25 + Math.random() * 0.3, tt + pulse);
-      tt += pulse;
-    }
-    g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
-    g.connect(fComp);
-
-    const osc = fac.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120 + Math.random() * 40, t);
-    osc.frequency.exponentialRampToValueAtTime(42, t + dur);
-    const wob = fac.createOscillator(); wob.frequency.value = 22 + Math.random() * 10;
-    const wobG = fac.createGain(); wobG.gain.value = 30;
-    wob.connect(wobG); wobG.connect(osc.frequency);
-    const lp = fac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 650; lp.Q.value = 3;
-    osc.connect(lp); lp.connect(g);
-
-    const nz = fac.createBufferSource();
-    nz.buffer = fNoise; nz.playbackRate.value = 0.9 + Math.random() * 0.3;
-    const bp = fac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700 + Math.random() * 500; bp.Q.value = 0.8;
-    const ng = fac.createGain(); ng.gain.value = 1.1;
-    nz.connect(bp); bp.connect(ng); ng.connect(g);
-
-    osc.start(t); wob.start(t); nz.start(t, Math.random() * 0.5);
-    osc.stop(t + dur); wob.stop(t + dur); nz.stop(t + dur);
+    const a = new Audio(pedoSrc);
+    a.volume = 1;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
   }
   document.addEventListener('pointerdown', fartSound);
 
