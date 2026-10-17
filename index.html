@@ -239,7 +239,7 @@
   }
 
   /* Mojones que salen volando al explotar */
-  .mojon { position: fixed; z-index: 216; pointer-events: none; line-height: 1; animation: mojonVuela 1.6s cubic-bezier(.15,.7,.3,1) forwards; }
+  .mojon { position: fixed; z-index: 216; pointer-events: none; line-height: 1; animation: mojonVuela 3.2s cubic-bezier(.2,.6,.3,1) forwards; }
   @keyframes mojonVuela { to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
 
   /* Vista ampliada de fotos */
@@ -757,9 +757,9 @@
       document.body.appendChild(pt);
     }
 
-    // Mojones que salen volando en todas direcciones desde la explosión
-    for (let i = 0; i < 50; i++) {
-      const ang = (i / 50) * Math.PI * 2 + Math.random() * 0.2;
+    // 200 mojones que salen volando en todas direcciones desde la explosión
+    for (let i = 0; i < 200; i++) {
+      const ang = (i / 200) * Math.PI * 2 + Math.random() * 0.1;
       const dist = 250 + Math.random() * 500;
       const m = document.createElement('span');
       m.className = 'mojon';
