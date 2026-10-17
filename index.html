@@ -238,7 +238,9 @@
     88% { transform: translate(-20px, 10px); }
   }
 
-  /* Mojones que salen volando al explotar */
+  /* Lienzo de mojones que salen volando al explotar */
+  .mojones-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 216; }
+  /* (estilo anterior, ya no se usa) */
   .mojon { position: fixed; z-index: 216; pointer-events: none; height: auto; transform: translate(-50%, -50%); animation: mojonVuela 3.2s cubic-bezier(.2,.6,.3,1) forwards; }
   @keyframes mojonVuela { to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
 
@@ -730,6 +732,54 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
+  // Mojones en un lienzo: miles de piezas a gran velocidad en todas direcciones
+  const mojonImg = new Image();
+  mojonImg.src = 'img/mojon.png';
+  const MOJONES = 20000;
+  let mojonCv = null, mojonCtx = null, mojonParts = [], mojonRaf = 0, mojonT = 0;
+  function lanzarMojones(x, y) {
+    if (!mojonCv) {
+      mojonCv = document.createElement('canvas');
+      mojonCv.className = 'mojones-canvas';
+      mojonCv.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(mojonCv);
+      mojonCtx = mojonCv.getContext('2d');
+    }
+    mojonCv.width = window.innerWidth;
+    mojonCv.height = window.innerHeight;
+    for (let i = 0; i < MOJONES; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const v = 600 + Math.random() * 1800; // píxeles por segundo
+      mojonParts.push({
+        x, y,
+        vx: Math.cos(ang) * v, vy: Math.sin(ang) * v,
+        s: 10 + Math.random() * 16, life: 0,
+      });
+    }
+    if (!mojonRaf) mojonRaf = requestAnimationFrame(pintarMojones);
+  }
+  function pintarMojones(t) {
+    if (!mojonT) mojonT = t;
+    const dt = Math.min((t - mojonT) / 1000, 0.05);
+    mojonT = t;
+    const W = mojonCv.width, H = mojonCv.height;
+    mojonCtx.clearRect(0, 0, W, H);
+    const frena = Math.pow(0.45, dt);
+    for (const p of mojonParts) {
+      p.life += dt;
+      p.vx *= frena; p.vy = p.vy * frena + 250 * dt; // frenan y caen suave
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      mojonCtx.drawImage(mojonImg, p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+    }
+    mojonParts = mojonParts.filter((p) => p.life < 3.2);
+    if (mojonParts.length) {
+      mojonRaf = requestAnimationFrame(pintarMojones);
+    } else {
+      mojonRaf = 0; mojonT = 0;
+      mojonCtx.clearRect(0, 0, W, H);
+    }
+  }
+
   // Explosión de pantalla: destello, anillo, pedazos y temblor
   function explotar(x, y) {
     const flash = document.createElement('div');
@@ -757,22 +807,8 @@
       document.body.appendChild(pt);
     }
 
-    // 1000 mojones (img/mojon.png) que vuelan por toda la página en todas direcciones desde la explosión
-    for (let i = 0; i < 1000; i++) {
-      const ang = (i / 1000) * Math.PI * 2 + Math.random() * 0.03;
-      const dist = 200 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 1.1;
-      const m = document.createElement('img');
-      m.src = 'img/mojon.png';
-      m.alt = '';
-      m.className = 'mojon';
-      m.style.width = (20 + Math.random() * 30) + 'px';
-      m.style.left = x + 'px'; m.style.top = y + 'px';
-      m.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-      m.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
-      m.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
-      m.addEventListener('animationend', () => m.remove());
-      document.body.appendChild(m);
-    }
+    // Mojones a toda velocidad en todas direcciones (se dibujan en un lienzo para que no se trabe)
+    lanzarMojones(x, y);
 
     // Temblor de toda la web (las secciones y el encabezado; el avión y el cursor no se mueven)
     document.querySelectorAll('header, main, section, footer').forEach((el) => {
