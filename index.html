@@ -170,6 +170,16 @@
   .hero-letter { animation: letterIn .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 90ms + 150ms); }
   @keyframes letterIn { from { opacity: 0; transform: translateY(40%); } to { opacity: 1; transform: none; } }
 
+  /* Letras que saltan al tocarlas (celular y computadora) */
+  .hero-letter { cursor: pointer; touch-action: manipulation; }
+  .hero-letter.hop { animation: hop .6s cubic-bezier(.2,.7,.2,1); }
+  @keyframes hop {
+    0%   { transform: none; }
+    35%  { transform: translateY(-14%) rotate(-5deg); }
+    70%  { transform: translateY(4%) rotate(3deg); }
+    100% { transform: none; }
+  }
+
   /* Reducir movimiento */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -426,6 +436,17 @@
     window.addEventListener('pointermove', (e) => { if (d) car.scrollLeft = sl - (e.clientX - sx); });
     window.addEventListener('pointerup', () => { d = false; car.style.scrollSnapType = ''; });
   }
+  // Letras del logo: saltan al tocarlas
+  document.querySelectorAll('.hero-letter').forEach((l) => {
+    const hop = () => {
+      l.classList.remove('hop');
+      void l.offsetWidth; // reinicia la animación
+      l.classList.add('hop');
+    };
+    l.addEventListener('pointerdown', hop);
+    l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') hop(); });
+    l.setAttribute('tabindex', '0');
+  });
 </script>
 </body>
 </html>
