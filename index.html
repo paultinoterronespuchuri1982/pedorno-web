@@ -216,6 +216,21 @@
   @keyframes kkDrop { from { transform: translate(-50%, -50%) rotate(var(--r)); } to { transform: translate(-50%, calc(-50% + var(--fall))) rotate(calc(var(--r) + 35deg)); } }
   @media (max-width: 700px) { .kk { width: 60px; } }
 
+  /* Explosión de pantalla al terminar el sonido de la bomba */
+  .boom-flash { position: fixed; inset: 0; background: #fff; z-index: 215; pointer-events: none; animation: boomFlash .6s ease-out forwards; }
+  @keyframes boomFlash { from { opacity: .9; } to { opacity: 0; } }
+  .boom-ring { position: fixed; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 4px solid var(--acid); border-radius: 50%; z-index: 213; pointer-events: none; animation: boomRing .8s ease-out forwards; }
+  @keyframes boomRing { to { transform: scale(45); opacity: 0; } }
+  .boom-part { position: fixed; width: 10px; height: 10px; z-index: 214; pointer-events: none; animation: boomPart 1s ease-out forwards; }
+  @keyframes boomPart { to { transform: translate(var(--dx), var(--dy)) rotate(360deg); opacity: 0; } }
+  .hero.shake { animation: shake .5s linear; }
+  @keyframes shake {
+    10%, 90% { transform: translate(-2px, 1px); }
+    20%, 80% { transform: translate(3px, -2px); }
+    30%, 50%, 70% { transform: translate(-6px, 3px); }
+    40%, 60% { transform: translate(6px, -4px); }
+  }
+
   /* Vista ampliada de fotos */
   .lightbox { position: fixed; inset: 0; z-index: 220; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; cursor: zoom-out; }
   .lightbox[hidden] { display: none; }
@@ -528,7 +543,7 @@
       k.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
       k.addEventListener('animationend', () => k.remove());
       // Silbido y explosión al salir la bomba
-      sonarBomba();
+      sonarBomba(x);
       document.body.appendChild(k);
     });
     document.body.appendChild(plane);
@@ -703,11 +718,43 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
   }
 
-  // Explosión: el archivo img/bomba.mp3 ya viene a 5 veces el volumen original y suena al doble de velocidad
-  function sonarBomba() {
+  // Explosión de pantalla: destello, anillo, pedazos y temblor
+  function explotar(x, y) {
+    const flash = document.createElement('div');
+    flash.className = 'boom-flash';
+    flash.addEventListener('animationend', () => flash.remove());
+    document.body.appendChild(flash);
+
+    const ring = document.createElement('div');
+    ring.className = 'boom-ring';
+    ring.style.left = x + 'px'; ring.style.top = y + 'px';
+    ring.addEventListener('animationend', () => ring.remove());
+    document.body.appendChild(ring);
+
+    const colores = ['#d4ff00', '#f2f0ea', '#ff5a1f', '#ffd21f'];
+    for (let i = 0; i < 28; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 120 + Math.random() * 380;
+      const pt = document.createElement('div');
+      pt.className = 'boom-part';
+      pt.style.left = x + 'px'; pt.style.top = y + 'px';
+      pt.style.background = colores[i % colores.length];
+      pt.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      pt.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      pt.addEventListener('animationend', () => pt.remove());
+      document.body.appendChild(pt);
+    }
+
+    const h = document.querySelector('.hero');
+    if (h) { h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); }
+  }
+
+  // Explosión: el archivo img/bomba.mp3 ya viene a 5 veces el volumen; suena a 4 veces la velocidad y explota al terminar
+  function sonarBomba(x) {
     const b = new Audio('img/bomba.mp3');
     b.preservesPitch = false; b.webkitPreservesPitch = false; // acelera también el tono, como una cinta
-    b.playbackRate = 2;
+    b.playbackRate = 4;
+    b.onended = () => explotar(x, window.innerHeight * 0.85);
     b.play().catch(() => {});
   }
 
