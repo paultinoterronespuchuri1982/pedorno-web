@@ -499,18 +499,6 @@
     l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') hop(); });
     l.setAttribute('tabindex', '0');
   });
-  // Música del disco: empieza con el primer toque en cualquier parte de la web
-  const bcFrame = document.querySelector('.bandcamp iframe');
-  let musicaIniciada = false;
-  const iniciarMusica = () => {
-    if (musicaIniciada || !bcFrame) return;
-    musicaIniciada = true;
-    bcFrame.src = bcFrame.dataset.auto;
-    document.dispatchEvent(new Event('musica-inicia'));
-  };
-  document.addEventListener('pointerdown', iniciarMusica);
-  document.addEventListener('keydown', iniciarMusica);
-
   // Avión que vuela por el sitio con sonido de motor
   if (!reduce) {
     const plane = document.createElement('img');
@@ -593,23 +581,39 @@
       engine = { el, pan, master };
       return true;
     }
-    btn.addEventListener('click', () => {
-      if (!ac) { if (!startAudio()) { btn.disabled = true; btn.textContent = 'Sin audio'; return; } }
+    function encenderMotor() {
+      if (!ac && !startAudio()) return;
       if (ac.state === 'suspended') ac.resume();
-      muted = !muted;
-      engine.master.gain.setTargetAtTime(muted ? 0 : 1.65, ac.currentTime, 0.08);
-      btn.textContent = muted ? 'Sonido: off' : 'Sonido: on';
-      btn.setAttribute('aria-pressed', String(!muted));
+      muted = false;
+      engine.master.gain.setTargetAtTime(1.65, ac.currentTime, 0.08);
+      btn.textContent = 'Sonido: on';
+      btn.setAttribute('aria-pressed', 'true');
+    }
+    function silenciarMotor() {
+      if (!ac || !engine || muted) return;
+      muted = true;
+      engine.master.gain.setTargetAtTime(0, ac.currentTime, 0.02);
+      btn.textContent = 'Sonido: off';
+      btn.setAttribute('aria-pressed', 'false');
+    }
+    btn.addEventListener('click', () => {
+      if (!ac) { encenderMotor(); return; }
+      if (muted) encenderMotor(); else silenciarMotor();
     });
-
-    // Cuando empieza la música de Bandcamp, el motor se calla de inmediato
-    document.addEventListener('musica-inicia', () => {
-      if (ac && engine && !muted) {
-        muted = true;
-        engine.master.gain.setTargetAtTime(0, ac.currentTime, 0.02);
-        btn.textContent = 'Sonido: off';
-        btn.setAttribute('aria-pressed', 'false');
-      }
+    // El avión suena desde el primer toque en la página
+    const primerToque = (e) => {
+      if (e.target && e.target.closest && e.target.closest('#sonido')) return;
+      if (!ac) encenderMotor();
+      document.removeEventListener('pointerdown', primerToque);
+      document.removeEventListener('keydown', primerToque);
+    };
+    document.addEventListener('pointerdown', primerToque);
+    document.addEventListener('keydown', primerToque);
+    // Cuando la persona toca el reproductor de Bandcamp, el foco pasa al iframe: ahí se calla el avión
+    window.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement.tagName === 'IFRAME') silenciarMotor();
+      }, 0);
     });
 
     function render(now) {
