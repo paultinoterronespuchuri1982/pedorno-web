@@ -205,6 +205,13 @@
   .sonido:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
   @media (max-width: 700px) { .avion { width: 240px; } }
 
+  /* Vista ampliada de fotos */
+  .lightbox { position: fixed; inset: 0; z-index: 220; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; cursor: zoom-out; }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 60px rgba(0,0,0,.6); }
+  .lb-close { position: absolute; top: 1rem; right: 1rem; background: none; border: 0; color: var(--acid); font-size: 2.5rem; line-height: 1; cursor: pointer; font-family: var(--display); }
+  .carousel figure img { cursor: zoom-in; }
+
   /* Reducir movimiento */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -216,6 +223,10 @@
 
 <div class="gate" id="gate">
   <button type="button" class="gate-btn" id="gateBtn">Entrar y escuchar ▶</button>
+</div>
+<div class="lightbox" id="lightbox" hidden>
+  <button type="button" class="lb-close" aria-label="Cerrar">×</button>
+  <img id="lbImg" alt="">
 </div>
 
 <header>
@@ -348,18 +359,18 @@
   <section class="carousel-sec" id="fotos">
     <p class="label reveal">05 — Fotos</p>
     <div class="carousel" tabindex="0" aria-label="Galería de fotos, desplázate horizontalmente">
-      <figure><img src="img/banda-grupo.jpg" alt="Foto de la banda 1" loading="lazy"></figure>
-      <figure><img src="img/foto-1.jpg" alt="Foto de la banda 2" loading="lazy"></figure>
-      <figure><img src="img/foto-2.jpg" alt="Foto de la banda 3" loading="lazy"></figure>
-      <figure><img src="img/foto-3.jpg" alt="Foto de la banda 4" loading="lazy"></figure>
-      <figure><img src="img/foto-4.jpg" alt="Foto de la banda 5" loading="lazy"></figure>
-      <figure><img src="img/foto-5.jpg" alt="Foto de la banda 6" loading="lazy"></figure>
-      <figure><img src="img/foto-6.jpg" alt="Foto de la banda 7" loading="lazy"></figure>
-      <figure><img src="img/foto-7.jpg" alt="Foto de la banda 8" loading="lazy"></figure>
-      <figure><img src="img/interior.jpg" alt="Foto de la banda 9" loading="lazy"></figure>
-      <figure><img src="img/insertos-b.jpg" alt="Foto de la banda 10" loading="lazy"></figure>
-      <figure><img src="img/muestra.jpg" alt="Foto de la banda 11" loading="lazy"></figure>
-      <figure><img src="img/disco-impresion.jpg" alt="Foto de la banda 12" loading="lazy"></figure>
+      <figure><img src="img/banda-grupo-hd.jpg" alt="Foto de la banda 1" loading="lazy"></figure>
+      <figure><img src="img/foto-1-hd.jpg" alt="Foto de la banda 2" loading="lazy"></figure>
+      <figure><img src="img/foto-2-hd.jpg" alt="Foto de la banda 3" loading="lazy"></figure>
+      <figure><img src="img/foto-3-hd.jpg" alt="Foto de la banda 4" loading="lazy"></figure>
+      <figure><img src="img/foto-4-hd.jpg" alt="Foto de la banda 5" loading="lazy"></figure>
+      <figure><img src="img/foto-5-hd.jpg" alt="Foto de la banda 6" loading="lazy"></figure>
+      <figure><img src="img/foto-6-hd.jpg" alt="Foto de la banda 7" loading="lazy"></figure>
+      <figure><img src="img/foto-7-hd.jpg" alt="Foto de la banda 8" loading="lazy"></figure>
+      <figure><img src="img/interior-hd.jpg" alt="Foto de la banda 9" loading="lazy"></figure>
+      <figure><img src="img/insertos-b-hd.jpg" alt="Foto de la banda 10" loading="lazy"></figure>
+      <figure><img src="img/muestra-hd.jpg" alt="Foto de la banda 11" loading="lazy"></figure>
+      <figure><img src="img/disco-impresion-hd.jpg" alt="Foto de la banda 12" loading="lazy"></figure>
     </div>
   </section>
 
@@ -641,6 +652,78 @@
   } else {
     document.getElementById('sonido').hidden = true;
   }
+  // Fotos del carrusel: se amplían al tocarlas (sin abrir si solo se arrastró)
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  if (car && lightbox && lbImg) {
+    let down = null;
+    car.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
+    car.querySelectorAll('figure img').forEach((img) => {
+      img.addEventListener('click', (e) => {
+        if (down && Math.abs(e.clientX - down.x) > 6) return;
+        lbImg.src = img.src;
+        lbImg.alt = img.alt;
+        lightbox.hidden = false;
+      });
+    });
+    const closeLb = () => { lightbox.hidden = true; lbImg.src = ''; };
+    lightbox.addEventListener('click', closeLb);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLb(); });
+  }
+
+  // Pedo al hacer clic (sintetizado con Web Audio)
+  const PAC = window.AudioContext || window.webkitAudioContext;
+  let fac = null, fNoise = null, fComp = null;
+  function fartSound() {
+    if (!PAC) return;
+    if (!fac) {
+      fac = new PAC();
+      fComp = fac.createDynamicsCompressor();
+      fComp.connect(fac.destination);
+      const len = fac.sampleRate;
+      fNoise = fac.createBuffer(1, len, fac.sampleRate);
+      const d = fNoise.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } // ruido marrón
+    }
+    if (fac.state === 'suspended') fac.resume();
+    const t = fac.currentTime;
+    const dur = 0.85 + Math.random() * 0.45;
+    const g = fac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(2.2, t + 0.04);
+    // Pulsos de "pedo": el volumen sube y baja de forma irregular
+    let tt = t + 0.04;
+    while (tt < t + dur) {
+      const pulse = 0.08 + Math.random() * 0.1;
+      g.gain.linearRampToValueAtTime(1.2 + Math.random() * 1.2, tt + pulse * 0.4);
+      g.gain.linearRampToValueAtTime(0.25 + Math.random() * 0.3, tt + pulse);
+      tt += pulse;
+    }
+    g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+    g.connect(fComp);
+
+    const osc = fac.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120 + Math.random() * 40, t);
+    osc.frequency.exponentialRampToValueAtTime(42, t + dur);
+    const wob = fac.createOscillator(); wob.frequency.value = 22 + Math.random() * 10;
+    const wobG = fac.createGain(); wobG.gain.value = 30;
+    wob.connect(wobG); wobG.connect(osc.frequency);
+    const lp = fac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 650; lp.Q.value = 3;
+    osc.connect(lp); lp.connect(g);
+
+    const nz = fac.createBufferSource();
+    nz.buffer = fNoise; nz.playbackRate.value = 0.9 + Math.random() * 0.3;
+    const bp = fac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700 + Math.random() * 500; bp.Q.value = 0.8;
+    const ng = fac.createGain(); ng.gain.value = 1.1;
+    nz.connect(bp); bp.connect(ng); ng.connect(g);
+
+    osc.start(t); wob.start(t); nz.start(t, Math.random() * 0.5);
+    osc.stop(t + dur); wob.stop(t + dur); nz.stop(t + dur);
+  }
+  document.addEventListener('pointerdown', fartSound);
+
 </script>
 </body>
 </html>
