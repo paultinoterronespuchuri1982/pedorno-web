@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEDORNO</title>
+<style>
+  :root {
+    --bg: #070707;
+    --fg: #f2f0ea;
+    --muted: #7d7b75;
+    --line: #1f1f1f;
+    --acid: #d4ff00;
+    --display: "Arial Black", Impact, "Helvetica Neue", sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; background: var(--bg); }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  :focus-visible { outline: 2px solid var(--acid); outline-offset: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* Grano sutil sobre todo el sitio */
+  body::after {
+    content: ""; position: fixed; inset: -50%; pointer-events: none; z-index: 90; opacity: .06;
+    background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 3px 3px;
+    animation: grain 1s steps(4) infinite;
+  }
+  @keyframes grain { 0% { transform: translate(0,0); } 25% { transform: translate(-2%,1%); } 50% { transform: translate(1%,-2%); } 75% { transform: translate(-1%,2%); } 100% { transform: translate(0,0); } }
+
+  /* Encabezado */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center;
+    padding: 1.25rem 1.5rem; color: #fff;
+  }
+  .brand { font-family: var(--display); font-size: 1.1rem; letter-spacing: .05em; }
+  nav ul { display: flex; gap: 1.75rem; list-style: none; font-size: .8rem; text-transform: uppercase; letter-spacing: .15em; }
+  nav a { position: relative; }
+  nav a::after { content: ""; position: absolute; left: 0; bottom: -4px; width: 0; height: 1px; background: currentColor; transition: width .4s ease; }
+  nav a:hover::after { width: 100%; }
+  .menu-btn { display: none; background: none; border: 0; color: inherit; font: inherit; text-transform: uppercase; letter-spacing: .15em; cursor: pointer; }
+
+  /* Hero */
+  .hero { min-height: 100vh; position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 1.5rem 3rem; overflow: hidden; }
+  .hero-img { position: absolute; inset: 0; opacity: .55; filter: grayscale(1) contrast(1.2); }
+  .hero-img img { transform: scale(1.1); }
+  .hero-name {
+    font-family: var(--display); font-size: clamp(4.5rem, 21vw, 22rem); line-height: .8; letter-spacing: -.04em;
+    text-transform: uppercase; position: relative; white-space: nowrap; user-select: none;
+  }
+  .hero-name span { display: inline-block; transition: transform .5s cubic-bezier(.2,.7,.2,1), color .3s ease; }
+  .hero-name span:hover { transform: translateY(-.08em) rotate(-3deg); color: var(--acid); }
+  .hero-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .2em; color: var(--muted); position: relative; }
+
+  /* Banda en movimiento */
+  .marquee { overflow: hidden; background: var(--acid); color: #000; white-space: nowrap; padding: .9rem 0; transform: rotate(-2deg) scale(1.03); margin: 4rem 0; }
+  .marquee-track { display: inline-flex; animation: marquee 22s linear infinite; font-family: var(--display); font-size: clamp(1.4rem, 3.5vw, 2.4rem); text-transform: uppercase; }
+  .marquee-track span { padding-right: 2rem; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* Secciones */
+  section { padding: 7rem 1.5rem; }
+  .label { font-size: .75rem; text-transform: uppercase; letter-spacing: .25em; color: var(--muted); margin-bottom: 1.5rem; }
+  h2 { font-family: var(--display); font-size: clamp(2.5rem, 8vw, 6.5rem); line-height: .9; text-transform: uppercase; letter-spacing: -.02em; }
+
+  /* Disco */
+  .album { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4rem; align-items: center; }
+  .album-cover { aspect-ratio: 1; overflow: hidden; position: relative; }
+  .album-cover img { filter: grayscale(1); transition: filter .6s ease, transform .8s ease; }
+  .album-cover:hover img { filter: grayscale(0); transform: scale(1.05); }
+  .album-info p { color: var(--muted); margin-top: 1.5rem; max-width: 36ch; line-height: 1.7; }
+  .btn { display: inline-block; margin-top: 2rem; padding: 1rem 2rem; border: 1px solid var(--fg); font-size: .8rem; text-transform: uppercase; letter-spacing: .2em; transition: background .3s, color .3s; }
+  .btn:hover, .btn:focus-visible { background: var(--fg); color: var(--bg); }
+
+  /* Fechas */
+  .dates { list-style: none; border-top: 1px solid var(--line); }
+  .dates li { display: grid; grid-template-columns: 110px 1fr 1fr auto; gap: 1rem; align-items: center; padding: 1.5rem 0; border-bottom: 1px solid var(--line); transition: background .3s, color .3s, padding .3s; }
+  .dates li:hover { background: var(--fg); color: var(--bg); padding-inline: 1rem; }
+  .dates .day { font-family: var(--display); font-size: 1.6rem; }
+  .dates .city { font-family: var(--display); font-size: 1.4rem; text-transform: uppercase; }
+  .dates .venue { color: var(--muted); font-size: .95rem; }
+  .dates li:hover .venue { color: #444; }
+  .dates a { font-size: .75rem; text-transform: uppercase; letter-spacing: .2em; border: 1px solid currentColor; padding: .5rem 1rem; }
+
+  /* Integrantes */
+  .members { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+  .member { position: relative; }
+  .member .frame { aspect-ratio: 3 / 4; overflow: hidden; }
+  .member img { filter: grayscale(1) contrast(1.1); transition: filter .5s ease, transform .6s ease; }
+  .member:hover img { filter: grayscale(0); transform: scale(1.06); }
+  .member h3 { font-family: var(--display); font-size: 1.3rem; text-transform: uppercase; margin-top: 1rem; }
+  .member p { color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .15em; margin-top: .25rem; }
+
+  /* Merch */
+  .merch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .item { position: relative; cursor: pointer; }
+  .item .frame { aspect-ratio: 4 / 5; overflow: hidden; background: #111; }
+  .item img { transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+  .item:hover img { transform: scale(1.08) rotate(-1deg); }
+  .item .price { position: absolute; top: 1rem; left: 1rem; background: var(--acid); color: #000; font-family: var(--display); font-size: .9rem; padding: .3rem .6rem; }
+  .item h3 { margin-top: 1rem; font-size: .95rem; text-transform: uppercase; letter-spacing: .08em; }
+
+  /* Franja de imagen completa */
+  .wide { height: 80vh; position: relative; overflow: hidden; }
+  .wide img { filter: grayscale(1) contrast(1.3); transform: translateY(var(--p, 0)); will-change: transform; }
+  .wide-text { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 2rem; }
+  .wide-text p { font-family: var(--display); font-size: clamp(2rem, 6vw, 5rem); text-transform: uppercase; line-height: .95; mix-blend-mode: difference; color: #fff; }
+
+  /* Suscripción */
+  .signup { border-top: 1px solid var(--line); }
+  .signup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: end; }
+  .signup p { color: var(--muted); line-height: 1.7; margin-top: 1.5rem; max-width: 40ch; }
+  form { display: flex; border-bottom: 1px solid var(--fg); }
+  form input { flex: 1; background: none; border: 0; color: var(--fg); font: inherit; font-size: 1.2rem; padding: 1rem 0; outline: none; }
+  form input::placeholder { color: var(--muted); }
+  form button { background: none; border: 0; color: var(--acid); font-family: var(--display); font-size: 1rem; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; padding: 0 .5rem; }
+  form button:hover { letter-spacing: .25em; }
+
+  /* Footer */
+  footer { padding: 4rem 1.5rem 2rem; border-top: 1px solid var(--line); }
+  .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem; }
+  .foot .brand { font-size: 3rem; }
+  .foot ul { list-style: none; display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: .8rem; text-transform: uppercase; letter-spacing: .15em; align-items: center; }
+  .foot a:hover { color: var(--acid); }
+  .legal { margin-top: 3rem; font-size: .75rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+
+  /* Movimiento de aparición */
+  .reveal { opacity: 0; transform: translateY(60px); transition: opacity 1s ease, transform 1s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* Cursor */
+  .cursor { position: fixed; top: 0; left: 0; width: 14px; height: 14px; background: var(--acid); border-radius: 50%; pointer-events: none; z-index: 120; transform: translate(-50%, -50%); display: none; mix-blend-mode: difference; }
+  .cursor.big { width: 90px; height: 90px; }
+  html.has-cursor, html.has-cursor a, html.has-cursor button, html.has-cursor input { cursor: none; }
+  html.has-cursor .cursor { display: block; }
+
+  /* Responsivo */
+  @media (max-width: 900px) {
+    nav { display: none; }
+    .menu-btn { display: block; }
+    nav.open { display: block; position: fixed; inset: 0; background: var(--bg); color: var(--fg); display: flex; align-items: center; justify-content: center; mix-blend-mode: normal; }
+    nav.open ul { flex-direction: column; align-items: center; font-size: 1.2rem; }
+    .album, .signup-grid { grid-template-columns: 1fr; }
+    .dates li { grid-template-columns: 1fr; gap: .25rem; }
+    .merch { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) { .merch { grid-template-columns: 1fr; } }
+
+  /* Logo */
+  .logo-img { height: 44px; width: auto; display: block; }
+  .logo-img-foot { height: 90px; width: auto; display: block; }
+  .hero-logo { width: min(92vw, 1100px); height: auto; margin: 0 auto; user-select: none; }
+  .hero-name { display: grid; place-items: center; }
+
+  /* Carrusel de fotos */
+  .carousel-sec { padding-left: 0; padding-right: 0; }
+  .carousel-sec .label { padding: 0 1.5rem; }
+  .carousel { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 1.5rem 1.5rem; scrollbar-width: thin; cursor: grab; }
+  .carousel figure { flex: 0 0 auto; scroll-snap-align: start; height: 420px; overflow: hidden; background: #111; }
+  .carousel img { height: 100%; width: auto; max-width: none; filter: grayscale(1) contrast(1.1); transition: filter .5s ease; pointer-events: none; }
+  .carousel figure:hover img { filter: grayscale(0); }
+  @media (max-width: 800px) { .carousel figure { height: 300px; } }
+
+  /* Letras separadas del logo en el hero */
+  .hero-letters { display: flex; align-items: flex-end; justify-content: center; gap: .6vw; width: 100%; }
+  .hero-letter { height: clamp(90px, 20vw, 250px); width: auto; transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+  .hero-letter:hover { transform: translateY(-6%) rotate(-4deg); }
+  .hero-letter { animation: letterIn .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 90ms + 150ms); }
+  @keyframes letterIn { from { opacity: 0; transform: translateY(40%); } to { opacity: 1; transform: none; } }
+
+  /* Reducir movimiento */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#inicio" class="brand"><img src="img/logo.png" alt="PEDORNO" class="logo-img"></a>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menú</button>
+  <nav id="nav" aria-label="Principal">
+    <ul>
+      <li><a href="#disco">Disco</a></li>
+      <li><a href="#gira">Gira</a></li>
+      <li><a href="#banda">Banda</a></li>
+      <li><a href="#merch">Merch</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div class="hero-img" aria-hidden="true">
+      <img src="img/banda-grupo.jpg" alt="">
+    </div>
+    <h1 class="hero-name" aria-label="Pedorno"><span class="hero-letters" role="img" aria-label="PEDORNO"><img src="img/letra-p.png" alt="P" class="hero-letter" style="--i:0"><img src="img/letra-e.png" alt="E" class="hero-letter" style="--i:1"><img src="img/letra-d.png" alt="D" class="hero-letter" style="--i:2"><img src="img/letra-o.png" alt="O" class="hero-letter" style="--i:3"><img src="img/letra-r.png" alt="R" class="hero-letter" style="--i:4"><img src="img/letra-n.png" alt="N" class="hero-letter" style="--i:5"><img src="img/letra-o2.png" alt="O" class="hero-letter" style="--i:6"></span></h1>
+    <div class="hero-meta">
+      <span>Rock · Garage · Desde 2019</span>
+      <span>Nuevo disco: 2026</span>
+      <span>Gira mundial en curso</span>
+    </div>
+  </section>
+
+  <!-- BANDA EN MOVIMIENTO -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Pedorno — Nuevo disco — Gira 2026 — Merch oficial —</span>
+      <span>Pedorno — Nuevo disco — Gira 2026 — Merch oficial —</span>
+      <span>Pedorno — Nuevo disco — Gira 2026 — Merch oficial —</span>
+      <span>Pedorno — Nuevo disco — Gira 2026 — Merch oficial —</span>
+    </div>
+  </div>
+
+  <!-- DISCO -->
+  <section id="disco">
+    <p class="label reveal">01 — Último lanzamiento</p>
+    <div class="album">
+      <div class="album-cover reveal">
+        <img src="img/disco-portada.jpg" alt="Portada del disco Ruido Bonito" loading="lazy">
+      </div>
+      <div class="album-info reveal">
+        <h2>Ruido<br>bonito</h2>
+        <p>Diez canciones grabadas en un garaje, con guitarras sucias, batería seca y letras que no piden permiso.</p>
+        <a href="#" class="btn">Escuchar</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GIRA -->
+  <section id="gira">
+    <p class="label reveal">02 — Gira</p>
+    <h2 class="reveal" style="margin-bottom: 3rem;">Fechas</h2>
+    <ul class="dates">
+      <li class="reveal"><span class="day">12 NOV</span><span class="city">Ciudad A</span><span class="venue">Club Nombre</span><a href="#">Entradas</a></li>
+      <li class="reveal"><span class="day">19 NOV</span><span class="city">Ciudad B</span><span class="venue">Teatro Nombre</span><a href="#">Entradas</a></li>
+      <li class="reveal"><span class="day">03 DIC</span><span class="city">Ciudad C</span><span class="venue">Sala Nombre</span><a href="#">Entradas</a></li>
+      <li class="reveal"><span class="day">17 DIC</span><span class="city">Ciudad D</span><span class="venue">Festival Nombre</span><a href="#">Entradas</a></li>
+    </ul>
+  </section>
+
+  <!-- FRANJA DE IMAGEN -->
+  <div class="wide" aria-hidden="true">
+    <img src="img/insertos-a.jpg" alt="" id="parallaxImg">
+    <div class="wide-text"><p>Ruido bonito. Sin permiso.</p></div>
+  </div>
+
+  <!-- BANDA -->
+  <section id="banda">
+    <p class="label reveal">03 — Integrantes</p>
+    <h2 class="reveal" style="margin-bottom: 3rem;">La banda</h2>
+    <div class="members">
+      <article class="member reveal">
+        <div class="frame"><img src="img/foto-1.jpg" alt="Integrante 1" loading="lazy"></div>
+        <h3>Nombre 1</h3>
+        <p>Voz y guitarra</p>
+      </article>
+      <article class="member reveal">
+        <div class="frame"><img src="img/foto-2.jpg" alt="Integrante 2" loading="lazy"></div>
+        <h3>Nombre 2</h3>
+        <p>Guitarra</p>
+      </article>
+      <article class="member reveal">
+        <div class="frame"><img src="img/foto-3.jpg" alt="Integrante 3" loading="lazy"></div>
+        <h3>Nombre 3</h3>
+        <p>Bajo</p>
+      </article>
+      <article class="member reveal">
+        <div class="frame"><img src="img/foto-4.jpg" alt="Integrante 4" loading="lazy"></div>
+        <h3>Nombre 4</h3>
+        <p>Batería</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- MERCH -->
+  <section id="merch">
+    <p class="label reveal">04 — Tienda</p>
+    <h2 class="reveal" style="margin-bottom: 3rem;">Merch</h2>
+    <div class="merch">
+      <article class="item reveal">
+        <div class="frame"><img src="https://picsum.photos/seed/pedorno-p1/800/1000" alt="Playera oficial" loading="lazy"></div>
+        <span class="price">$ 00</span>
+        <h3>Playera oficial</h3>
+      </article>
+      <article class="item reveal">
+        <div class="frame"><img src="https://picsum.photos/seed/pedorno-p2/800/1000" alt="Disco en vinilo" loading="lazy"></div>
+        <span class="price">$ 00</span>
+        <h3>Vinilo Ruido bonito</h3>
+      </article>
+      <article class="item reveal">
+        <div class="frame"><img src="https://picsum.photos/seed/pedorno-p3/800/1000" alt="Gorra oficial" loading="lazy"></div>
+        <span class="price">$ 00</span>
+        <h3>Gorra oficial</h3>
+      </article>
+    </div>
+  </section>
+
+  <!-- FOTOS: carrusel -->
+  <section class="carousel-sec" id="fotos">
+    <p class="label reveal">05 — Fotos</p>
+    <div class="carousel" tabindex="0" aria-label="Galería de fotos, desplázate horizontalmente">
+      <figure><img src="img/banda-grupo.jpg" alt="Foto de la banda 1" loading="lazy"></figure>
+      <figure><img src="img/foto-1.jpg" alt="Foto de la banda 2" loading="lazy"></figure>
+      <figure><img src="img/foto-2.jpg" alt="Foto de la banda 3" loading="lazy"></figure>
+      <figure><img src="img/foto-3.jpg" alt="Foto de la banda 4" loading="lazy"></figure>
+      <figure><img src="img/foto-4.jpg" alt="Foto de la banda 5" loading="lazy"></figure>
+      <figure><img src="img/foto-5.jpg" alt="Foto de la banda 6" loading="lazy"></figure>
+      <figure><img src="img/foto-6.jpg" alt="Foto de la banda 7" loading="lazy"></figure>
+      <figure><img src="img/foto-7.jpg" alt="Foto de la banda 8" loading="lazy"></figure>
+      <figure><img src="img/interior.jpg" alt="Foto de la banda 9" loading="lazy"></figure>
+      <figure><img src="img/insertos-b.jpg" alt="Foto de la banda 10" loading="lazy"></figure>
+      <figure><img src="img/muestra.jpg" alt="Foto de la banda 11" loading="lazy"></figure>
+      <figure><img src="img/disco-impresion.jpg" alt="Foto de la banda 12" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section class="signup" id="contacto">
+    <div class="signup-grid">
+      <div class="reveal">
+        <h2>Entérate<br>primero</h2>
+        <p>Fechas, lanzamientos y sorpresas antes que nadie. Sin spam, solo ruido.</p>
+      </div>
+      <form class="reveal" action="#" method="post">
+        <label for="email" class="sr-only">Correo electrónico</label>
+        <input type="email" id="email" name="email" placeholder="tu@correo.com" required>
+        <button type="submit">Unirme</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot">
+    <img src="img/logo.png" alt="PEDORNO" class="logo-img-foot">
+    <ul>
+      <li><a href="#">Instagram</a></li>
+      <li><a href="#">Spotify</a></li>
+      <li><a href="#">YouTube</a></li>
+      <li><a href="#">TikTok</a></li>
+    </ul>
+  </div>
+  <div class="legal">
+    <span>© 2026 Pedorno</span>
+    <span><a href="#">Privacidad</a> · <a href="#">Términos</a></span>
+  </div>
+</footer>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Menú móvil
+  const menuBtn = document.getElementById('menuBtn');
+  const nav = document.getElementById('nav');
+  menuBtn.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', String(open));
+  });
+  nav.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => {
+    nav.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+  }));
+
+  // Formulario: sin servicio real conectado
+  document.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Conecta aquí tu servicio de correo.');
+  });
+
+  // Aparición al hacer scroll
+  if (!reduce) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+  }
+
+  // Imagen de franja con parallax
+  const wideImg = document.getElementById('parallaxImg');
+  if (!reduce && wideImg) {
+    window.addEventListener('scroll', () => {
+      const rect = wideImg.parentElement.getBoundingClientRect();
+      const offset = (rect.top / window.innerHeight) * -60;
+      wideImg.style.setProperty('--p', offset + 'px');
+    }, { passive: true });
+  }
+
+  // Cursor personalizado (solo en computadoras con mouse)
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduce) {
+    document.documentElement.classList.add('has-cursor');
+    const dot = document.createElement('div');
+    dot.className = 'cursor';
+    dot.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(dot);
+    let mx = 0, my = 0, x = 0, y = 0;
+    window.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; });
+    (function follow() {
+      x += (mx - x) * 0.18;
+      y += (my - y) * 0.18;
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      requestAnimationFrame(follow);
+    })();
+    document.querySelectorAll('a, button, .item, .member, .album-cover').forEach((el) => {
+      el.addEventListener('mouseenter', () => dot.classList.add('big'));
+      el.addEventListener('mouseleave', () => dot.classList.remove('big'));
+    });
+  }
+  // Carrusel arrastrable con el mouse
+  const car = document.querySelector('.carousel');
+  if (car) {
+    let d = false, sx = 0, sl = 0;
+    car.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; d = true; sx = e.clientX; sl = car.scrollLeft; car.style.scrollSnapType = 'none'; });
+    window.addEventListener('pointermove', (e) => { if (d) car.scrollLeft = sl - (e.clientX - sx); });
+    window.addEventListener('pointerup', () => { d = false; car.style.scrollSnapType = ''; });
+  }
+</script>
+</body>
+</html>
