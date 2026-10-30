@@ -853,7 +853,7 @@ h2 {
   cursor: pointer;
 }
 
-/* ---------- Efectos del avión (solo computadoras con mouse) ---------- */
+/* ---------- Efectos del avión ---------- */
 .avion {
   position: fixed;
   left: 0;
@@ -1014,7 +1014,7 @@ h2 {
 
   .dates .ticket { justify-self: start; margin-top: 0.5rem; }
 
-  .avion { width: 220px; }
+  .avion { width: 240px; }
 }
 
 @media (max-width: 560px) {
@@ -1023,12 +1023,6 @@ h2 {
   .bandcamp iframe { height: 420px; }
 
   .hero-actions .btn { flex: 1 1 100%; }
-}
-
-/* En celular no hay avión ni botón de sonido: no tapan los controles */
-@media (pointer: coarse) {
-  .avion,
-  .sonido { display: none !important; }
 }
 
 /* ---------- Reducir movimiento ---------- */

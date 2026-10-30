@@ -3,7 +3,6 @@
   'use strict';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   const $ = (sel, scope = document) => scope.querySelector(sel);
   const $$ = (sel, scope = document) => Array.from(scope.querySelectorAll(sel));
 
@@ -216,8 +215,8 @@
     }
   });
 
-  /* ---------- Efectos del avión (solo con mouse y sin "reducir movimiento") ---------- */
-  if (finePointer.matches && !reduceMotion.matches) {
+  /* ---------- Efectos del avión (sin "reducir movimiento") ---------- */
+  if (!reduceMotion.matches) {
     initFlyer();
   }
 
@@ -248,6 +247,16 @@
     }
 
     sonidoBtn.addEventListener('click', () => setSound(!soundOn));
+
+    // El avión suena desde el primer toque en la página (como antes)
+    const primerToque = (e) => {
+      if (e.target && e.target.closest && e.target.closest('#sonidoBtn')) return;
+      if (!soundOn) setSound(true);
+      document.removeEventListener('pointerdown', primerToque);
+      document.removeEventListener('keydown', primerToque);
+    };
+    document.addEventListener('pointerdown', primerToque);
+    document.addEventListener('keydown', primerToque);
 
     // Si el foco entra al reproductor de Bandcamp, el motor se calla
     window.addEventListener('blur', () => {
