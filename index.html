@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!--
+  Política de seguridad (CSP): limita de dónde puede cargar la página
+  scripts, estilos, fuentes, imágenes, audio y marcos.
+  Solo se ejecuta el script en línea de abajo (identificado por su hash),
+  el JavaScript del sitio (js/main.js) y los archivos propios.
+  Si agregas un servicio nuevo (por ejemplo, un formulario de correo),
+  tendrás que añadir su dominio aquí.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/x7W7R75k8Roq0WaVRQX9blP4OufE5xbAdzklGxsgpw='; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; media-src 'self'; frame-src https://bandcamp.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<!-- Marca la página como JavaScript activo: sin esto, los elementos con
+     animación de entrada quedarían ocultos. Debe ir antes del CSS. -->
 <script>document.documentElement.classList.add('js');</script>
 
 <title>PEDORNO — Rock · Garage</title>
@@ -102,7 +116,7 @@
           <h2>Ruido<br>bonito</h2>
           <p>Diez canciones grabadas en un garaje, con guitarras sucias, batería seca y letras que no piden permiso.</p>
           <div class="album-actions">
-            <a href="https://pedorno.bandcamp.com/album/m-s-all-del-nombre" class="btn btn--primary" target="_blank" rel="noopener">Escuchar en Bandcamp</a>
+            <a href="https://pedorno.bandcamp.com/album/m-s-all-del-nombre" class="btn btn--primary" target="_blank" rel="noopener noreferrer">Escuchar en Bandcamp</a>
           </div>
         </div>
       </div>
@@ -268,13 +282,13 @@
     <div class="foot">
       <img src="img/logo.png" alt="PEDORNO" class="foot-logo" width="240" height="80" loading="lazy">
       <ul class="redes">
-        <li><a href="https://www.instagram.com/pedorno_/" target="_blank" rel="noopener" aria-label="Instagram de Pedorno" title="Instagram">
+        <li><a href="https://www.instagram.com/pedorno_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Pedorno" title="Instagram">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor"/></svg>
         </a></li>
-        <li><a href="https://www.youtube.com/@pedornotv2226" target="_blank" rel="noopener" aria-label="YouTube de Pedorno" title="YouTube">
+        <li><a href="https://www.youtube.com/@pedornotv2226" target="_blank" rel="noopener noreferrer" aria-label="YouTube de Pedorno" title="YouTube">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="currentColor"/><path d="M10 9l5 3-5 3z" fill="#000"/></svg>
         </a></li>
-        <li><a href="https://pedorno.bandcamp.com" target="_blank" rel="noopener" aria-label="Bandcamp de Pedorno" title="Bandcamp">
+        <li><a href="https://pedorno.bandcamp.com" target="_blank" rel="noopener noreferrer" aria-label="Bandcamp de Pedorno" title="Bandcamp">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19L10 5h11l-7 14z" fill="currentColor"/></svg>
         </a></li>
       </ul>

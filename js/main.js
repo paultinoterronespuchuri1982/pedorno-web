@@ -1,4 +1,18 @@
-/* PEDORNO — interacciones del sitio. JavaScript simple, sin dependencias. */
+/*
+  PEDORNO — interacciones del sitio. JavaScript simple, sin dependencias.
+
+  Todo el código va dentro de una función autoejecutable (IIFE) para no
+  crear variables globales. Las secciones, en orden:
+    1. Cabecera y botón volver arriba
+    2. Menú móvil y sección activa
+    3. Animaciones de entrada y parallax
+    4. Formulario de contacto (validación)
+    5. Carrusel y visor de fotos
+    6. Avión, sonido y explosión (solo si no hay "reducir movimiento")
+
+  Seguridad: no se usa innerHTML con datos externos; todo el texto se
+  asigna con textContent o con propiedades seguras.
+*/
 (() => {
   'use strict';
 
